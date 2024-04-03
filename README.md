@@ -51,5 +51,26 @@ EOF
 $ msggen -pkg translations
 ```
 
+# Integrating inside your application.
+Add a simple middleware to your http server to set the locale based on the accept language header.
+```go
+var localeRe = regexp.MustCompile(`([a-z]{2})([\-_]{1}[A-Z]{2})?`)
+
+func requestLanguage(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// The format is mostly: en-GB,en-US.....
+		// We are only interested in picking the first item that matches the regex.
+		// The regex matches en as well as en_GB.
+		matches := localeRe.FindStringSubmatch(r.Header.Get("Accept-Language"))
+		if len(matches) > 1 {
+			// Set the locale in the ctx to allow handlers along the chain to fetch the correct translation.
+			r = r.WithContext(messages.WrapLocale(r.Context(), matches[1]))
+		}
+
+		next.ServeHTTP(w, r)
+	})
+}
+```
+
 ## Idea
 The idea for this package comes from [this talk](https://youtu.be/RpmYXh0ppRo?t=1830) by Alan Shreve.
