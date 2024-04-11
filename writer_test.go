@@ -4,15 +4,16 @@ import (
 	"bytes"
 	"flag"
 	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 	"github.com/wvell/messages"
 )
 
-var genGolden = flag.Bool("gen_golden", false, "Generate golden template file")
+var genGolden = flag.Bool("gen_golden", false, "Generate golden template files")
 
-func TestWriteTemplate(t *testing.T) {
+func TestWriteTemplateWithLocales(t *testing.T) {
 	flag.Parse()
 
 	defaultMsg, err := messages.ParseMessage("Hello, %(user)s!")
@@ -41,17 +42,39 @@ func TestWriteTemplate(t *testing.T) {
 		},
 	}
 
-	var buf bytes.Buffer
-	err = messages.Write(message, "testpkg", &buf)
+	writeMessages(t, message, "template.golden_locales")
+}
+
+func TestWriteTemplateWithoutLocales(t *testing.T) {
+	defaultMsg, err := messages.ParseMessage("Hello world!")
 	require.NoError(t, err)
 
+	localized, err := messages.NewLocalizedMessage("HelloWorld", defaultMsg)
+	require.NoError(t, err)
+
+	message := &messages.Messages{
+		Name: "Test",
+		Messages: []*messages.LocalizedMessage{
+			localized,
+		},
+	}
+
+	writeMessages(t, message, "template.golden_no_locales")
+}
+
+func writeMessages(t *testing.T, message *messages.Messages, goldenFile string) {
+	var buf bytes.Buffer
+	err := messages.Write(message, "testpkg", &buf)
+	require.NoError(t, err)
+
+	goldenPath := filepath.Join("./testdata/", goldenFile)
 	if *genGolden {
 		err = os.MkdirAll("./testdata", 0755)
 		if err != nil {
 			t.Fatalf("Failed to create the testdata directory: %v", err)
 		}
 
-		err = os.WriteFile("./testdata/template.golden", buf.Bytes(), 0644)
+		err = os.WriteFile(goldenPath, buf.Bytes(), 0644)
 		if err != nil {
 			t.Fatalf("Failed to write the golden file: %v", err)
 		}
@@ -59,7 +82,7 @@ func TestWriteTemplate(t *testing.T) {
 		return
 	}
 
-	golden, err := os.ReadFile("./testdata/template.golden")
+	golden, err := os.ReadFile(goldenPath)
 	require.NoError(t, err)
 
 	if !bytes.Equal(golden, buf.Bytes()) {
