@@ -91,15 +91,25 @@ func (c *Messages) Add(m *LocalizedMessage) error {
 }
 
 func (c Messages) HasType(tp VarType) bool {
-	for _, container := range c.Messages {
-		if container.Default.HasType(tp) {
+	for _, message := range c.Messages {
+		if message.Default.HasType(tp) {
 			return true
 		}
 
-		for _, tr := range container.Translations {
+		for _, tr := range message.Translations {
 			if tr.Message.HasType(tp) {
 				return true
 			}
+		}
+	}
+
+	return false
+}
+
+func (c Messages) HasTranslations() bool {
+	for _, message := range c.Messages {
+		if len(message.Translations) > 0 {
+			return true
 		}
 	}
 
