@@ -4,11 +4,12 @@ package {{ .Package }}
 {{- $containerName := .Messages.Name }}
 {{- $varTypeInt := .VarTypeInt }}
 {{- $varTypeString := .VarTypeString }}
+{{- $varTypeFloat := .VarTypeFloat }}
 
 import(
 	"fmt"
 	"context"
-	{{- if .Messages.HasType $varTypeInt }}
+	{{- if or (.Messages.HasType $varTypeInt) (.Messages.HasType $varTypeFloat)  }}
 	"golang.org/x/exp/constraints"
 	{{- end }}
 	{{- if .Messages.HasTranslations }}
@@ -18,11 +19,12 @@ import(
 
 {{- range .Messages.Messages }}
 {{- $default := .Default }}
-{{- $hasInteger := .HasType $varTypeInt }}
+{{- $typeParams := .UniqueTypes.Filter $varTypeInt $varTypeFloat }}
+{{- $typeParamsLength := len $typeParams }}
 {{ $vars := .UniqueVars }}
-func {{ $containerName }}{{ .Identifier }}{{ if $hasInteger }}[Integer constraints.Integer]{{ end }}(ctx context.Context
+func {{ $containerName }}{{ .Identifier }}{{ if (len $typeParams) }}[{{ range $index, $varType := $typeParams }}{{ if eq $varType $varTypeInt }}Integer constraints.Integer{{ else if eq $varType $varTypeFloat}}Float constraints.Float{{ end }}{{ if lt (add $index 1) $typeParamsLength }}, {{ end }}{{ end }}]{{ end }}(ctx context.Context
 	{{- if gt (len $vars) 0 }},
-	{{- range $index, $var := $vars }} {{ $var.Name }} {{ if eq $var.Type $varTypeInt }}Integer{{ else }}string{{ end }}{{ if lt $index (sub (len $vars) 1) }},{{ end }}{{ end }}
+	{{- range $index, $var := $vars }} {{ $var.Name }} {{ if eq $var.Type $varTypeInt }}Integer{{ else if eq $var.Type $varTypeFloat}}Float{{ else }}string{{ end }}{{ if lt $index (sub (len $vars) 1) }},{{ end }}{{ end }}
 	{{- end }}) string {
 	{{ if eq (len .Translations) 0 -}}
 	return fmt.Sprintf("{{ $default.Message }}"{{ if gt (len $default.Vars) 0 }},{{ range $index, $var := $default.Vars }} {{ $var.Name }}{{ if lt $index (sub (len $default.Vars) 1) }},{{ end }}{{ end }}{{ end }})
