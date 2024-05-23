@@ -10,14 +10,15 @@ import (
 var (
 	ErrReservedKeyword      = errors.New("reserved keyword")
 	ErrIdentifierInvalid    = errors.New("identifier must start with an uppercase letter and contain only letters and numbers")
-	ErrUnsupportedFormat    = errors.New("format only supports 's' and 'd'")
+	ErrUnsupportedFormat    = errors.New("format only supports 's', 'd' and float formatting with 'f', '9f', '.2f', '9.2f' or '9f")
 	ErrVariableTypeMix      = errors.New("a variable can only be of one type")
 	ErrDuplicateTranslation = errors.New("duplicate translation")
 	ErrDuplicateIdentifier  = errors.New("duplicate identifier")
 
 	identifierRe = regexp.MustCompile(`^[A-Z][a-zA-Z0-9]*$`)
 
-	varRe = regexp.MustCompile(`(?m)%\(([a-zA-Z]+)\)([a-z])`)
+	varRe   = regexp.MustCompile(`%\(([a-zA-Z]+)\)([0-9\.]*[a-z]{1})`)
+	floatRe = regexp.MustCompile(`^([0-9]+)?\.?([0-9]+)?f$`)
 )
 
 // NewLocalizedMessage creates a new message container.
@@ -40,11 +41,17 @@ func ParseMessage(raw string) (*Message, error) {
 	}
 
 	for _, varMatch := range varRe.FindAllStringSubmatch(raw, -1) {
+
 		if isReservedKeyword(varMatch[1]) {
 			return nil, ErrReservedKeyword
 		}
 
-		if varMatch[2] != "s" && varMatch[2] != "d" {
+		// Check if the format is a float format and it is valid.
+		if strings.HasSuffix(varMatch[2], "f") {
+			if !floatRe.MatchString(varMatch[2]) {
+				return nil, fmt.Errorf("%q's var %q contains invalid float format %q: %w", raw, varMatch[1], varMatch[2], ErrUnsupportedFormat)
+			}
+		} else if varMatch[2] != "s" && varMatch[2] != "d" {
 			return nil, fmt.Errorf("%q's var %q contains format %q: %w", raw, varMatch[1], varMatch[2], ErrUnsupportedFormat)
 		}
 
@@ -57,6 +64,8 @@ func ParseMessage(raw string) (*Message, error) {
 			msgVar.Type = VarTypeInt
 		case "s":
 			msgVar.Type = VarTypeString
+		default:
+			msgVar.Type = VarTypeFloat
 		}
 
 		// Check if the var already exists with a different format.
@@ -88,6 +97,21 @@ func (c *Messages) Add(m *LocalizedMessage) error {
 	c.Messages = append(c.Messages, m)
 
 	return nil
+}
+
+func (c Messages) UniqueTypes() UniqueTypes {
+	types := make(UniqueTypes, 0)
+
+	for _, m := range c.Messages {
+		mtypes := m.UniqueTypes()
+		for _, t := range mtypes {
+			if !contains(types, t) {
+				types = append(types, t)
+			}
+		}
+	}
+
+	return types
 }
 
 func (c Messages) HasType(tp VarType) bool {
@@ -190,6 +214,42 @@ func (l *LocalizedMessage) UniqueVars() []*Var {
 	return vars
 }
 
+func (l *LocalizedMessage) UniqueTypes() UniqueTypes {
+	types := make(UniqueTypes, 0)
+
+	for _, v := range l.Default.UniqueVars() {
+		if !contains(types, v.Type) {
+			types = append(types, v.Type)
+		}
+	}
+
+	for _, tr := range l.Translations {
+		uniqueVars := tr.Message.UniqueVars()
+
+		for _, v := range uniqueVars {
+			if !contains(types, v.Type) {
+				types = append(types, v.Type)
+			}
+		}
+	}
+
+	return types
+}
+
+type UniqueTypes []VarType
+
+func (u UniqueTypes) Filter(typs ...VarType) []VarType {
+	filtered := make([]VarType, 0)
+
+	for _, typ := range typs {
+		if contains(u, typ) {
+			filtered = append(filtered, typ)
+		}
+	}
+
+	return filtered
+}
+
 // Message is a single message and it's vars.
 type Message struct {
 	Message string
@@ -245,6 +305,7 @@ type VarType string
 var (
 	VarTypeString VarType = "string"
 	VarTypeInt    VarType = "int"
+	VarTypeFloat  VarType = "float"
 )
 
 // reservedKeywords contains all the reserved keywords. Variables and functions cannot have these names.
@@ -278,4 +339,15 @@ func varTypesConsistent(comp *Message, target *Message) error {
 	}
 
 	return nil
+}
+
+// contains checks if the slice contains the value.
+func contains[T comparable](slice []T, value T) bool {
+	for _, item := range slice {
+		if item == value {
+			return true
+		}
+	}
+
+	return false
 }

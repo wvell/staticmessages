@@ -16,6 +16,9 @@ var (
 		"sub": func(a, b int) int {
 			return a - b
 		},
+		"add": func(a, b int) int {
+			return a + b
+		},
 	}
 )
 
@@ -29,5 +32,6 @@ func Write(msg *Messages, pkg string, w io.Writer) error {
 		"Messages":      msg,
 		"VarTypeInt":    VarTypeInt,
 		"VarTypeString": VarTypeString,
+		"VarTypeFloat":  VarTypeFloat,
 	})
 }

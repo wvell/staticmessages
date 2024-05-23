@@ -175,4 +175,47 @@ func TestParseMessage(t *testing.T) {
 		require.Len(t, msg.Vars, 3)
 		require.Len(t, msg.UniqueVars(), 2)
 	})
+
+	floatingPointCases := []struct {
+		message     string
+		expected    string
+		expectedErr bool
+	}{
+		{
+			message:  "Your order total is %(total)f!",
+			expected: "Your order total is %f!",
+		},
+		{
+			message:  "Your order total is %(total)9f!",
+			expected: "Your order total is %9f!",
+		},
+		{
+			message:  "Your order total is %(total)9.2f!",
+			expected: "Your order total is %9.2f!",
+		},
+		{
+			message:  "Your order total is %(total)9f!",
+			expected: "Your order total is %9f!",
+		},
+		{
+			message:  "Your order total is %(total).2f!",
+			expected: "Your order total is %.2f!",
+		},
+		{
+			message:     "Your order total is %(total)9..f!",
+			expectedErr: true,
+		},
+	}
+
+	for _, c := range floatingPointCases {
+		t.Run(c.message, func(t *testing.T) {
+			msg, err := messages.ParseMessage(c.message)
+			if c.expectedErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, c.expected, msg.Message)
+			}
+		})
+	}
 }

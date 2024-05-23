@@ -4,8 +4,9 @@ package testpkg
 import(
 	"fmt"
 	"context"
+	"golang.org/x/exp/constraints"
 )
 
-func TestHelloWorld(ctx context.Context) string {
-	return fmt.Sprintf("Hello world!")
+func TestHelloWorld[Integer constraints.Integer, Float constraints.Float](ctx context.Context, user string, items Integer, total Float) string {
+	return fmt.Sprintf("Hello %s! Your cart has %d and total is %.2f.", user, items, total)
 }

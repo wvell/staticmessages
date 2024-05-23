@@ -72,5 +72,5 @@ func requestLanguage(next http.Handler) http.Handler {
 }
 ```
 
-## Idea
-The idea for this package comes from [this talk](https://youtu.be/RpmYXh0ppRo?t=1830) by Alan Shreve.
+## Inspiration
+The inspiration for this package comes from [this talk](https://youtu.be/RpmYXh0ppRo?t=1830) by Alan Shreve.

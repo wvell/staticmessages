@@ -46,7 +46,7 @@ func TestWriteTemplateWithLocales(t *testing.T) {
 }
 
 func TestWriteTemplateWithoutLocales(t *testing.T) {
-	defaultMsg, err := messages.ParseMessage("Hello world!")
+	defaultMsg, err := messages.ParseMessage("Hello %(user)s! Your cart has %(items)d and total is %(total).2f.")
 	require.NoError(t, err)
 
 	localized, err := messages.NewLocalizedMessage("HelloWorld", defaultMsg)
