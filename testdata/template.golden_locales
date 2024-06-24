@@ -5,7 +5,7 @@ import(
 	"fmt"
 	"context"
 	"golang.org/x/exp/constraints"
-	"github.com/wvell/messages"
+	"github.com/wvell/staticmessages"
 )
 
 func TestHelloUser[Integer constraints.Integer](ctx context.Context, user string, n Integer) string {

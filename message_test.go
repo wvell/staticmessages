@@ -1,110 +1,110 @@
-package messages_test
+package staticmessages_test
 
 import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"github.com/wvell/messages"
+	"github.com/wvell/staticmessages"
 )
 
 func TestMessages(t *testing.T) {
 	t.Run("duplicate identifiers", func(t *testing.T) {
-		container := &messages.Messages{}
+		container := &staticmessages.Messages{}
 
-		defaultMessage, err := messages.ParseMessage("Hello, World!")
+		defaultMessage, err := staticmessages.ParseMessage("Hello, World!")
 		require.NoError(t, err)
 
-		loc, err := messages.NewLocalizedMessage("Foo", defaultMessage)
-		require.NoError(t, err)
-
-		err = container.Add(loc)
+		loc, err := staticmessages.NewLocalizedMessage("Foo", defaultMessage)
 		require.NoError(t, err)
 
 		err = container.Add(loc)
-		require.ErrorIs(t, err, messages.ErrDuplicateIdentifier)
+		require.NoError(t, err)
+
+		err = container.Add(loc)
+		require.ErrorIs(t, err, staticmessages.ErrDuplicateIdentifier)
 	})
 }
 
 func TestLocalizedMessage(t *testing.T) {
-	defaultMessage, err := messages.ParseMessage("Hello, World!")
+	defaultMessage, err := staticmessages.ParseMessage("Hello, World!")
 	require.NoError(t, err)
 
 	t.Run("empty name", func(t *testing.T) {
-		_, err := messages.NewLocalizedMessage("", defaultMessage)
-		require.Equal(t, messages.ErrIdentifierInvalid, err, "expected error for empty name")
+		_, err := staticmessages.NewLocalizedMessage("", defaultMessage)
+		require.Equal(t, staticmessages.ErrIdentifierInvalid, err, "expected error for empty name")
 	})
 
 	t.Run("name not uppercase", func(t *testing.T) {
-		_, err := messages.NewLocalizedMessage("foo", defaultMessage)
-		require.Equal(t, messages.ErrIdentifierInvalid, err, "expected error for name not uppercase")
+		_, err := staticmessages.NewLocalizedMessage("foo", defaultMessage)
+		require.Equal(t, staticmessages.ErrIdentifierInvalid, err, "expected error for name not uppercase")
 	})
 
 	t.Run("valid name", func(t *testing.T) {
-		c, err := messages.NewLocalizedMessage("Foo", defaultMessage)
+		c, err := staticmessages.NewLocalizedMessage("Foo", defaultMessage)
 		require.NoError(t, err, "expected no error for valid name")
 		require.Equal(t, "Foo", c.Identifier, "expected name to be set")
 		require.NotNil(t, c.Translations, "expected translations to be initialized")
 	})
 
 	t.Run("invalid vars between default and translation", func(t *testing.T) {
-		msg, err := messages.ParseMessage("Hello, %(user)s!")
+		msg, err := staticmessages.ParseMessage("Hello, %(user)s!")
 		require.NoError(t, err)
 
-		c, err := messages.NewLocalizedMessage("Foo", msg)
+		c, err := staticmessages.NewLocalizedMessage("Foo", msg)
 		require.NoError(t, err, "expected no error for valid name")
 
-		tr, err := messages.ParseMessage("Hello, %(user)d!")
+		tr, err := staticmessages.ParseMessage("Hello, %(user)d!")
 		require.NoError(t, err)
 
 		err = c.AddTranslation("en", tr)
-		require.ErrorIs(t, err, messages.ErrVariableTypeMix)
+		require.ErrorIs(t, err, staticmessages.ErrVariableTypeMix)
 	})
 
 	t.Run("invalid vars between 2 translations", func(t *testing.T) {
-		msg, err := messages.ParseMessage("Hello, world!")
+		msg, err := staticmessages.ParseMessage("Hello, world!")
 		require.NoError(t, err)
 
-		c, err := messages.NewLocalizedMessage("Foo", msg)
+		c, err := staticmessages.NewLocalizedMessage("Foo", msg)
 		require.NoError(t, err, "expected no error for valid name")
 
-		tr, err := messages.ParseMessage("Hallo, %(user)d!")
+		tr, err := staticmessages.ParseMessage("Hallo, %(user)d!")
 		require.NoError(t, err)
 
 		err = c.AddTranslation("nl", tr)
 		require.NoError(t, err)
 
-		tr, err = messages.ParseMessage("Hallo, %(user)s!")
+		tr, err = staticmessages.ParseMessage("Hallo, %(user)s!")
 		require.NoError(t, err)
 
 		err = c.AddTranslation("de", tr)
-		require.ErrorIs(t, err, messages.ErrVariableTypeMix)
+		require.ErrorIs(t, err, staticmessages.ErrVariableTypeMix)
 	})
 
 	t.Run("duplicate translations", func(t *testing.T) {
-		msg, err := messages.ParseMessage("Hello, %(user)s!")
+		msg, err := staticmessages.ParseMessage("Hello, %(user)s!")
 		require.NoError(t, err)
 
-		c, err := messages.NewLocalizedMessage("Foo", msg)
+		c, err := staticmessages.NewLocalizedMessage("Foo", msg)
 		require.NoError(t, err, "expected no error for valid name")
 
-		tr, err := messages.ParseMessage("Hallo, %(user)s!")
+		tr, err := staticmessages.ParseMessage("Hallo, %(user)s!")
 		require.NoError(t, err)
 
 		err = c.AddTranslation("nl", tr)
 		require.NoError(t, err)
 
 		err = c.AddTranslation("nl", tr)
-		require.ErrorIs(t, err, messages.ErrDuplicateTranslation)
+		require.ErrorIs(t, err, staticmessages.ErrDuplicateTranslation)
 	})
 
 	t.Run("valid translations", func(t *testing.T) {
-		msg, err := messages.ParseMessage("Hello, %(user)s!")
+		msg, err := staticmessages.ParseMessage("Hello, %(user)s!")
 		require.NoError(t, err)
 
-		c, err := messages.NewLocalizedMessage("Foo", msg)
+		c, err := staticmessages.NewLocalizedMessage("Foo", msg)
 		require.NoError(t, err, "expected no error for valid name")
 
-		tr, err := messages.ParseMessage("Hallo, %(user)s!")
+		tr, err := staticmessages.ParseMessage("Hallo, %(user)s!")
 		require.NoError(t, err)
 
 		err = c.AddTranslation("nl", tr)
@@ -112,19 +112,19 @@ func TestLocalizedMessage(t *testing.T) {
 	})
 
 	t.Run("unique translations", func(t *testing.T) {
-		msg, err := messages.ParseMessage("Hello, %(user)s!")
+		msg, err := staticmessages.ParseMessage("Hello, %(user)s!")
 		require.NoError(t, err)
 
-		c, err := messages.NewLocalizedMessage("Foo", msg)
+		c, err := staticmessages.NewLocalizedMessage("Foo", msg)
 		require.NoError(t, err, "expected no error for valid name")
 
-		tr, err := messages.ParseMessage("Hallo, %(user)s! Er zijn %(count)d nieuwe berichten!")
+		tr, err := staticmessages.ParseMessage("Hallo, %(user)s! Er zijn %(count)d nieuwe berichten!")
 		require.NoError(t, err)
 
 		err = c.AddTranslation("nl", tr)
 		require.NoError(t, err)
 
-		tr, err = messages.ParseMessage("Dein letzter Anmeldeversuch war vor %(tage)d Tagen.")
+		tr, err = staticmessages.ParseMessage("Dein letzter Anmeldeversuch war vor %(tage)d Tagen.")
 		require.NoError(t, err)
 
 		err = c.AddTranslation("de", tr)
@@ -137,7 +137,7 @@ func TestLocalizedMessage(t *testing.T) {
 
 func TestParseMessage(t *testing.T) {
 	t.Run("simple", func(t *testing.T) {
-		tr, err := messages.ParseMessage("Hello, World!")
+		tr, err := staticmessages.ParseMessage("Hello, World!")
 		require.NoError(t, err)
 		require.Equal(t, "Hello, World!", tr.Message, "expected message to be set")
 		require.Len(t, tr.Vars, 0)
@@ -152,23 +152,23 @@ func TestParseMessage(t *testing.T) {
 			"const", "fallthrough", "if", "range", "type",
 			"continue", "for", "import", "return", "var",
 		} {
-			_, err := messages.ParseMessage("Hello, World! %(" + reserved + ")s")
-			require.ErrorIs(t, err, messages.ErrReservedKeyword)
+			_, err := staticmessages.ParseMessage("Hello, World! %(" + reserved + ")s")
+			require.ErrorIs(t, err, staticmessages.ErrReservedKeyword)
 		}
 	})
 
 	t.Run("unsupported format", func(t *testing.T) {
-		_, err := messages.ParseMessage("Hello, World! %(test)q")
-		require.ErrorIs(t, err, messages.ErrUnsupportedFormat)
+		_, err := staticmessages.ParseMessage("Hello, World! %(test)q")
+		require.ErrorIs(t, err, staticmessages.ErrUnsupportedFormat)
 	})
 
 	t.Run("same var twice in different format", func(t *testing.T) {
-		_, err := messages.ParseMessage("Hello, %(test)d! %(test)s")
-		require.ErrorIs(t, err, messages.ErrVariableTypeMix)
+		_, err := staticmessages.ParseMessage("Hello, %(test)d! %(test)s")
+		require.ErrorIs(t, err, staticmessages.ErrVariableTypeMix)
 	})
 
 	t.Run("parse vars", func(t *testing.T) {
-		msg, err := messages.ParseMessage("Hello %(user)s! You have %(count)d new messages in your <a href=\"/user/%(user)s\">inbox</a>.")
+		msg, err := staticmessages.ParseMessage("Hello %(user)s! You have %(count)d new messages in your <a href=\"/user/%(user)s\">inbox</a>.")
 		require.NoError(t, err)
 
 		require.Equal(t, "Hello %s! You have %d new messages in your <a href=\"/user/%s\">inbox</a>.", msg.Message)
@@ -209,7 +209,7 @@ func TestParseMessage(t *testing.T) {
 
 	for _, c := range floatingPointCases {
 		t.Run(c.message, func(t *testing.T) {
-			msg, err := messages.ParseMessage(c.message)
+			msg, err := staticmessages.ParseMessage(c.message)
 			if c.expectedErr {
 				require.Error(t, err)
 			} else {

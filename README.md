@@ -1,5 +1,5 @@
-# Messages
-Messages is a simple go library/command that helps with the translation of messages and errors in your application.
+# Static messages
+Static messages is a simple go library/command that helps with the translation of messages and errors in your application.
 
 It converts simple translations files like this:
 ```yaml
@@ -35,7 +35,7 @@ func GetUser(ctx context.Context, ID int64) (*User, error) {
 # Usage
 Install the latest version of msggen.
 ```bash
-$ go install github.com/wvell/messages/cmd/msggen@latest
+$ go install github.com/wvell/staticmessages/cmd/msggen@latest
 
 # Test your installation.
 $ msggen --help

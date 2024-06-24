@@ -1,4 +1,4 @@
-module github.com/wvell/messages
+module github.com/wvell/staticmessages
 
 go 1.21.1
 

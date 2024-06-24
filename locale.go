@@ -1,4 +1,4 @@
-package messages
+package staticmessages
 
 import "context"
 

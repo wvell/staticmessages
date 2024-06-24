@@ -1,4 +1,4 @@
-package messages_test
+package staticmessages_test
 
 import (
 	"bytes"
@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"github.com/wvell/messages"
+	"github.com/wvell/staticmessages"
 )
 
 var genGolden = flag.Bool("gen_golden", false, "Generate golden template files")
@@ -16,27 +16,27 @@ var genGolden = flag.Bool("gen_golden", false, "Generate golden template files")
 func TestWriteTemplateWithLocales(t *testing.T) {
 	flag.Parse()
 
-	defaultMsg, err := messages.ParseMessage("Hello, %(user)s!")
+	defaultMsg, err := staticmessages.ParseMessage("Hello, %(user)s!")
 	require.NoError(t, err)
 
-	localizedOne, err := messages.NewLocalizedMessage("HelloUser", defaultMsg)
+	localizedOne, err := staticmessages.NewLocalizedMessage("HelloUser", defaultMsg)
 	require.NoError(t, err)
 
-	nlMsg, err := messages.ParseMessage("Hallo, %(user)s, je hebt %(n)d! nieuwe berichten!")
+	nlMsg, err := staticmessages.ParseMessage("Hallo, %(user)s, je hebt %(n)d! nieuwe berichten!")
 	require.NoError(t, err)
 
 	err = localizedOne.AddTranslation("nl", nlMsg)
 	require.NoError(t, err)
 
-	defaultMsg, err = messages.ParseMessage("Hello world!")
+	defaultMsg, err = staticmessages.ParseMessage("Hello world!")
 	require.NoError(t, err)
 
-	localizedTwo, err := messages.NewLocalizedMessage("HelloWorld", defaultMsg)
+	localizedTwo, err := staticmessages.NewLocalizedMessage("HelloWorld", defaultMsg)
 	require.NoError(t, err)
 
-	message := &messages.Messages{
+	message := &staticmessages.Messages{
 		Name: "Test",
-		Messages: []*messages.LocalizedMessage{
+		Messages: []*staticmessages.LocalizedMessage{
 			localizedOne,
 			localizedTwo,
 		},
@@ -46,15 +46,15 @@ func TestWriteTemplateWithLocales(t *testing.T) {
 }
 
 func TestWriteTemplateWithoutLocales(t *testing.T) {
-	defaultMsg, err := messages.ParseMessage("Hello %(user)s! Your cart has %(items)d and total is %(total).2f.")
+	defaultMsg, err := staticmessages.ParseMessage("Hello %(user)s! Your cart has %(items)d and total is %(total).2f.")
 	require.NoError(t, err)
 
-	localized, err := messages.NewLocalizedMessage("HelloWorld", defaultMsg)
+	localized, err := staticmessages.NewLocalizedMessage("HelloWorld", defaultMsg)
 	require.NoError(t, err)
 
-	message := &messages.Messages{
+	message := &staticmessages.Messages{
 		Name: "Test",
-		Messages: []*messages.LocalizedMessage{
+		Messages: []*staticmessages.LocalizedMessage{
 			localized,
 		},
 	}
@@ -62,9 +62,9 @@ func TestWriteTemplateWithoutLocales(t *testing.T) {
 	writeMessages(t, message, "template.golden_no_locales")
 }
 
-func writeMessages(t *testing.T, message *messages.Messages, goldenFile string) {
+func writeMessages(t *testing.T, message *staticmessages.Messages, goldenFile string) {
 	var buf bytes.Buffer
-	err := messages.Write(message, "testpkg", &buf)
+	err := staticmessages.Write(message, "testpkg", &buf)
 	require.NoError(t, err)
 
 	goldenPath := filepath.Join("./testdata/", goldenFile)

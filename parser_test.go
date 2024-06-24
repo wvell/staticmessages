@@ -1,40 +1,40 @@
-package messages_test
+package staticmessages_test
 
 import (
 	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"github.com/wvell/messages"
+	"github.com/wvell/staticmessages"
 )
 
 func TestParser(t *testing.T) {
 	t.Run("name invalid", func(t *testing.T) {
-		_, err := messages.Parse("", strings.NewReader("test"))
-		require.ErrorIs(t, err, messages.ErrYamlNameInvalid)
+		_, err := staticmessages.Parse("", strings.NewReader("test"))
+		require.ErrorIs(t, err, staticmessages.ErrYamlNameInvalid)
 	})
 
 	t.Run("invalid yml", func(t *testing.T) {
-		_, err := messages.Parse("Invalid", strings.NewReader(":"))
-		require.ErrorIs(t, err, messages.ErrYamlDefinitionInvalid)
+		_, err := staticmessages.Parse("Invalid", strings.NewReader(":"))
+		require.ErrorIs(t, err, staticmessages.ErrYamlDefinitionInvalid)
 	})
 
 	t.Run("invalid structure", func(t *testing.T) {
-		_, err := messages.Parse("Invalid", strings.NewReader("Some structure"))
-		require.ErrorIs(t, err, messages.ErrYamlDefinitionInvalid)
+		_, err := staticmessages.Parse("Invalid", strings.NewReader("Some structure"))
+		require.ErrorIs(t, err, staticmessages.ErrYamlDefinitionInvalid)
 	})
 
 	t.Run("identifier not capitalized", func(t *testing.T) {
-		_, err := messages.Parse("Invalid", strings.NewReader(`someMessage:
+		_, err := staticmessages.Parse("Invalid", strings.NewReader(`someMessage:
   default: Hello, World!
 someSecondMessage:
   default: Hello, World!
 `))
-		require.ErrorIs(t, err, messages.ErrYamlDefinitionInvalid)
+		require.ErrorIs(t, err, staticmessages.ErrYamlDefinitionInvalid)
 	})
 
 	t.Run("valid", func(t *testing.T) {
-		container, err := messages.Parse("valid", strings.NewReader(`HelloWorld:
+		container, err := staticmessages.Parse("valid", strings.NewReader(`HelloWorld:
   default: Hello, World!
   nl: Hallo, Wereld!
 HelloUser:
