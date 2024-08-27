@@ -29,7 +29,7 @@ func {{ $containerName }}{{ .Identifier }}{{ if (len $typeParams) }}[{{ range $i
 	{{ if eq (len .Translations) 0 -}}
 	return fmt.Sprintf("{{ $default.Message }}"{{ if gt (len $default.Vars) 0 }},{{ range $index, $var := $default.Vars }} {{ $var.Name }}{{ if lt $index (sub (len $default.Vars) 1) }},{{ end }}{{ end }}{{ end }})
 	{{- else -}}
-	switch messages.GetLocale(ctx) {
+	switch staticmessages.GetLocale(ctx) {
 	{{ range $t := .Translations -}}
 	case "{{ $t.Locale }}":
 		return fmt.Sprintf("{{ $t.Message.Message }}"{{ if gt (len $t.Message.Vars) 0 }},{{ range $index, $var := $t.Message.Vars }} {{ $var.Name }}{{ if lt $index (sub (len $t.Message.Vars) 1) }},{{ end }}{{ end }}{{ end }})
